@@ -1,10 +1,9 @@
 pipeline {
   agent {
-  docker {
-    image 'maven:3.8.6-eclipse-temurin-17'
-    args '--user root -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker'
-  }
-}
+    docker {
+      image 'maven:3.8.6-eclipse-temurin-17'
+      args '--user root -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker'
+    }
   }
   stages {
     stage('Checkout') {
@@ -32,25 +31,21 @@ pipeline {
         }
       }
     }
-   stage('Build and Push Docker Image') {
-  environment {
-    DOCKER_IMAGE = "mawais01980/pipelinex:${BUILD_NUMBER}"
-    REGISTRY_CREDENTIALS = credentials('docker-cred')
-  }
-  steps {
-    script {
-      sh '''
-        apt-get update && apt-get install -y docker.io
-        cd java-maven-sonar-argocd-helm-k8s/spring-boot-app
-        docker build -t ${DOCKER_IMAGE} .
-      '''
-      def dockerImage = docker.image("${DOCKER_IMAGE}")
-      docker.withRegistry('https://index.docker.io/v1/', "docker-cred") {
-        dockerImage.push()
+    stage('Build and Push Docker Image') {
+      environment {
+        DOCKER_IMAGE = "mawais01980/pipelinex:${BUILD_NUMBER}"
+        REGISTRY_CREDENTIALS = credentials('docker-cred')
+      }
+      steps {
+        script {
+          sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && docker build -t ${DOCKER_IMAGE} .'
+          def dockerImage = docker.image("${DOCKER_IMAGE}")
+          docker.withRegistry('https://index.docker.io/v1/', "docker-cred") {
+            dockerImage.push()
+          }
+        }
       }
     }
-  }
-}
     stage('Update Deployment File') {
       environment {
         GIT_REPO_NAME = "PipelineX"
