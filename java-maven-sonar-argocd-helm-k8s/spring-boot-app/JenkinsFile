@@ -44,6 +44,7 @@ pipeline {
             dockerImage.push()
           }
         }
+        sh 'docker system prune -f'
       }
     }
     stage('Update Deployment File') {
@@ -62,7 +63,13 @@ pipeline {
             git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
           '''
         }
+        sh 'docker system prune -f'
       }
+    }
+  }
+  post {
+    always {
+      sh 'docker system prune -f || true'
     }
   }
 }
